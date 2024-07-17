@@ -23,5 +23,12 @@ namespace BlazorEcommerce.Client.Services.ProductService
 			}
 			
 		}
-	}
+
+        public async Task<ServiceResponse<Product>> GetProduct(int id)
+        {
+			var result = await _httpClient.GetFromJsonAsync<ServiceResponse<Product>>($"/api/product/{id}");
+
+			return result;
+        }
+    }
 }
