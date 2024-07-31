@@ -56,5 +56,53 @@ namespace BlazorEcommerce.Server.Services.ProductService
 
 			return response;
         }
+
+        public async Task<ServiceResponse<List<string>>> GetProductSearchSuggestions(string searchText)
+        {
+            var products = await FindProductsBySearchText(searchText);
+
+			var data = new List<string>();
+
+			foreach(var product in products)
+			{
+				if(product.Title.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+				{
+					data.Add(product.Title);
+				}
+
+				if(product.Description != null)
+				{
+					var punctuation = product.Description.Where(char.IsPunctuation).Distinct().ToArray();
+					var words = product.Description.Split()
+						.Select(s => s.Trim(punctuation));
+
+					foreach(var word in words)
+					{
+						if(word.Contains(searchText, StringComparison.OrdinalIgnoreCase) && !data.Contains(word))
+						{
+							data.Add(word);
+						}
+					}
+				}
+			}
+
+            return new ServiceResponse<List<string>> { Data = data };
+        }
+
+        public async Task<ServiceResponse<List<Product>>> SearchProducts(string searchText)
+        {
+            var data = await FindProductsBySearchText(searchText);
+
+			return new ServiceResponse<List<Product>> { Data = data };
+        }
+
+		private async Task<List<Product>> FindProductsBySearchText(string searchText)
+		{
+            var data = await _context.Products.Where(x => x.Title.ToLower().Contains(searchText.ToLower()) || x.Description.ToLower().Contains(searchText.ToLower()))
+                .Include(x => x.Variants)
+                .ToListAsync();
+
+			return data;
+        }
     }
 }
