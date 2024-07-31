@@ -15,7 +15,7 @@ namespace BlazorEcommerce.Server.Controllers
             _categoryService = categoryService;
         }
 
-        public async Task<ActionResult<List<Category>>> FetchCategories()
+        public async Task<ActionResult<ServiceResponse<List<Category>>>> FetchCategories()
         {
             var res = await _categoryService.GetCategories();
             return Ok(res);
