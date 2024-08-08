@@ -21,6 +21,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContext<DataContext>(config =>
 {
@@ -33,7 +34,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 		{
 			ValidateIssuerSigningKey = true,
 			IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8
-				.GetBytes(builder.Configuration.GetSection("AppSettings:Token").Value)),
+				.GetBytes(builder.Configuration.GetSection("AppSettings:SecretKey").Value)),
 			ValidateIssuer = false,
 			ValidateAudience = false
 		};
