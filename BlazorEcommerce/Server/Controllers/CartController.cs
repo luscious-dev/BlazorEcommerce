@@ -36,7 +36,28 @@ namespace BlazorEcommerce.Server.Controllers
 			return await cartService.GetCartItemsCount();
 		}
 
-        [HttpGet]
+		[HttpPost("add")]
+		public async Task<ActionResult<ServiceResponse<bool>>> AddToCart(CartItem item)
+		{
+			var res = await cartService.AddToCart(item);
+			return Ok(res);
+		}
+
+		[HttpPut("update-quantity")]
+		public async Task<ActionResult<ServiceResponse<bool>>> UpdateQuantity(CartItem item)
+		{
+			var res = await cartService.UpdateQuantity(item);
+			return Ok(res);
+		}
+
+		[HttpDelete("{productId}/{productTypeId}")]
+		public async Task<ActionResult<ServiceResponse<bool>>> RemoveItemFromCart(int productId, int productTypeId)
+		{
+			var res = await cartService.RemoveItemFromCart(productId, productTypeId);
+			return Ok(res);
+		}
+
+		[HttpGet]
         public async Task<ActionResult<ServiceResponse<List<CartProductResponse>>>> GetDbCartProducts()
         {
             var result = await cartService.GetDbCartProducts();

@@ -69,12 +69,11 @@ else
 	}
 	private async Task LoadCart()
 	{
-		var cartItems = await CartService.GetCartItems();
-		if (cartItems.Count == 0)
+		cartProducts = await CartService.GetCartProducts();
+		if (cartProducts.Count == 0)
 		{
 			message = "Your cart is empty";
 		}
-		cartProducts = await CartService.GetCartProducts();
 	}
 
 	// Version 1

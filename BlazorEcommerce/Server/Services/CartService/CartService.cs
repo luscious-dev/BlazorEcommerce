@@ -1,5 +1,6 @@
 ﻿
 using BlazorEcommerce.Server.Data;
+using BlazorEcommerce.Shared;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -8,15 +9,36 @@ namespace BlazorEcommerce.Server.Services.CartService
 	public class CartService : ICartService
 	{
 		private readonly DataContext _context;
-		private readonly IHttpContextAccessor _contextAccessor;
+		private readonly IHttpContextAccessor _httpContextAccessor;
 
         public CartService(DataContext coontext, IHttpContextAccessor contextAccessor)
         {
             _context = coontext;
-            _contextAccessor = contextAccessor;
+            _httpContextAccessor = contextAccessor;
         }
 
-        public async Task<ServiceResponse<int>> GetCartItemsCount()
+		public async Task<ServiceResponse<bool>> AddToCart(CartItem cartItem)
+		{
+			cartItem.UserId = GetUserId();
+			var sameItem = await _context.CartItems.FirstOrDefaultAsync(x => x.ProductId == cartItem.ProductId && x.ProductTypeId == cartItem.ProductTypeId && x.UserId == cartItem.UserId);
+
+			if(cartItem == null)
+			{
+				_context.CartItems.Add(cartItem);
+			}
+			else
+			{
+				sameItem.Quantity += cartItem.Quantity;
+			}
+
+			await _context.SaveChangesAsync();
+			return new ServiceResponse<bool>
+			{
+				Data = true
+			};
+		}
+
+		public async Task<ServiceResponse<int>> GetCartItemsCount()
         {
             var count = await _context.CartItems.Where(x => x.UserId == GetUserId()).CountAsync();
 			return new ServiceResponse<int> { Data = count };
@@ -65,7 +87,26 @@ namespace BlazorEcommerce.Server.Services.CartService
 			return await GetCartProducts(await _context.CartItems.Where(x => x.UserId == GetUserId()).ToListAsync());
         }
 
-        public async Task<ServiceResponse<List<CartProductResponse>>> StoreCartItems(List<CartItem> cartItems)
+		public async Task<ServiceResponse<bool>> RemoveItemFromCart(int productId, int productTypeId)
+		{
+			var sameItem = await _context.CartItems.FirstOrDefaultAsync(x => x.ProductId == productId && x.ProductTypeId == productTypeId && x.UserId == GetUserId());
+
+			if (sameItem is null)
+			{
+				return new ServiceResponse<bool>
+				{
+					Data = false,
+					Success = false,
+					Message = "Cart item does not exist"
+				};
+			}
+			_context.CartItems.Remove(sameItem);
+
+			await _context.SaveChangesAsync();
+			return new ServiceResponse<bool> { Data = true };
+		}
+
+		public async Task<ServiceResponse<List<CartProductResponse>>> StoreCartItems(List<CartItem> cartItems)
         {
 			var userId = GetUserId();
             cartItems.ForEach(cartItem => cartItem.UserId = userId);
@@ -77,6 +118,26 @@ namespace BlazorEcommerce.Server.Services.CartService
 				);
         }
 
-		private int GetUserId() => int.Parse(_contextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+		public async Task<ServiceResponse<bool>> UpdateQuantity(CartItem cartItem)
+		{
+			cartItem.UserId = GetUserId();
+			var sameItem = await _context.CartItems.FirstOrDefaultAsync(x => x.ProductId == cartItem.ProductId && x.ProductTypeId == cartItem.ProductTypeId && x.UserId == GetUserId());
+
+			if(sameItem is null)
+			{
+				return new ServiceResponse<bool>
+				{
+					Data = false,
+					Success = false,
+					Message = "Cart item does not exist"
+				};
+			}
+
+			sameItem.Quantity = cartItem.Quantity;
+			await _context.SaveChangesAsync();
+			return new ServiceResponse<bool> { Data = true };
+		}
+
+		private int GetUserId() => int.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
     }
 }
