@@ -1,5 +1,6 @@
 ﻿@page "/cart"
 @inject ICartService CartService
+@inject IOrderService OrderService
 @implements IDisposable
 
 <PageTitle>Shopping Cart</PageTitle>
@@ -12,7 +13,10 @@
 		@message
 	</span>
 }
-
+else if (orderPlaced)
+{
+	<span>Thank you for your order! You can check your orders <a href="orders">here</a></span>
+}
 else
 {
 	<div>
@@ -49,15 +53,18 @@ else
 			Total (@cartProducts.Count): $@cartProducts.Sum(cartItem => cartItem.Price * cartItem.Quantity)
 		</div>
 	</div>
+	<button @onclick="PlaceOrder" class="btn alert-success float-end mt-1">Place Order</button>
 }
 
 @code {
 
 	private List<CartProductResponse> cartProducts = new List<CartProductResponse>();
 	string message = "Loading cart...";
+	bool orderPlaced = false;
 
 	protected override async Task OnInitializedAsync()
 	{
+		orderPlaced = false;
 		await LoadCart();
 		CartService.OnChange += StateHasChanged;
 	}
@@ -74,6 +81,13 @@ else
 		{
 			message = "Your cart is empty";
 		}
+	}
+
+	private async Task PlaceOrder()
+	{
+		await OrderService.PlaceOrder();
+		await CartService.GetCartItemsCount();
+		orderPlaced = true;
 	}
 
 	// Version 1

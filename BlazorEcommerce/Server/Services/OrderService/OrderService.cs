@@ -10,9 +10,9 @@ namespace BlazorEcommerce.Server.Services.OrderService
 	{
 		private readonly DataContext _dbContext;
 		private readonly ICartService _cartService;
-		private readonly HttpContextAccessor _httpContextAccessor;
+		private readonly IHttpContextAccessor _httpContextAccessor;
 
-		public OrderService(DataContext dbContext, ICartService cartService, HttpContextAccessor httpContextAccessor)
+		public OrderService(DataContext dbContext, ICartService cartService, IHttpContextAccessor httpContextAccessor)
 		{
 			_dbContext = dbContext;
 			_cartService = cartService;
@@ -51,6 +51,8 @@ namespace BlazorEcommerce.Server.Services.OrderService
 			};
 
 			_dbContext.Orders.Add(order);
+
+			_dbContext.CartItems.RemoveRange(_dbContext.CartItems.Where(x => x.UserId == GetUserId()));
 			await _dbContext.SaveChangesAsync();
 			return new ServiceResponse<bool> { Data = true };
 		}
