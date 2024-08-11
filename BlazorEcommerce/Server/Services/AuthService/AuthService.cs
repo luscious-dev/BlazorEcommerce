@@ -13,14 +13,16 @@ namespace BlazorEcommerce.Server.Services.AuthService
     {
         private readonly DataContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _contextAccessor;
 
-        public AuthService(DataContext context, IConfiguration configuration)
-        {
-            _context = context;
-            _configuration = configuration;
-        }
+		public AuthService(DataContext context, IConfiguration configuration, IHttpContextAccessor contextAccessor)
+		{
+			_context = context;
+			_configuration = configuration;
+			_contextAccessor = contextAccessor;
+		}
 
-        public async Task<ServiceResponse<string>> Login(string email, string password)
+		public async Task<ServiceResponse<string>> Login(string email, string password)
         {
             var response = new ServiceResponse<string>();
             var user = await _context.Users
@@ -129,6 +131,11 @@ namespace BlazorEcommerce.Server.Services.AuthService
             await _context.SaveChangesAsync();
 
             return new ServiceResponse<bool> { Data = true, Success = true, Message = "Password u " };
+		}
+
+		public int GetUserId()
+		{
+			return int.Parse(_contextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 		}
 	}
 }

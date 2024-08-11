@@ -1,6 +1,8 @@
 ﻿
+using BlazorEcommerce.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using System.Net.Http.Json;
 
 namespace BlazorEcommerce.Client.Services.OrderService
 {
@@ -16,6 +18,19 @@ namespace BlazorEcommerce.Client.Services.OrderService
 			_authStateProvider = authStateProvider;
 			_navigationManger = navigationManger;
 		}
+
+		public async Task<OrderDetailsResponse> GetOrderDetails(int orderId)
+		{
+			var result = await _httpClient.GetFromJsonAsync<ServiceResponse<OrderDetailsResponse>>($"api/order/{orderId}");
+			return result.Data;
+		}
+
+		public async Task<List<OrderOverviewResponse>> GetOrders()
+		{
+			var res = await _httpClient.GetFromJsonAsync<ServiceResponse<List<OrderOverviewResponse>>>("api/order");
+			return res.Data;
+		}
+
 		public async Task PlaceOrder()
 		{
 			if(await IsUserAuthenticated())
